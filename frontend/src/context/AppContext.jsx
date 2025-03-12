@@ -4,13 +4,17 @@ import { dummyCourses } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 export const AppContext = createContext();
 import humanizeDuration from "humanize-duration";
+import { useAuth, useUser } from "@clerk/clerk-react";
 
 export const AppContextProvider = (props) => {
   const currency = import.meta.env.VITE_CURRENCY;
   const navigate = useNavigate();
   const [isEducator, setIsEducator] = useState(true);
   const [allcourses, setAllCourses] = useState([]);
-  const [enrolledCourses,setEnrolledCourses] = useState([])
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+
+  const { getToken } = useAuth();
+  const { user } = useUser();
 
   // Fetch all Courses
 
@@ -51,27 +55,35 @@ export const AppContextProvider = (props) => {
   };
 
   //Function to calculate numbers of lacture in course
-  const calculateNumberOfLecture = (course)=>{
-    let totalLectures = 0
-    course.courseContent.forEach(chapter => {
-      if(Array.isArray(chapter.chapterContent)){
-        totalLectures += chapter.chapterContent.length
+  const calculateNumberOfLecture = (course) => {
+    let totalLectures = 0;
+    course.courseContent.forEach((chapter) => {
+      if (Array.isArray(chapter.chapterContent)) {
+        totalLectures += chapter.chapterContent.length;
       }
-    })
-    return totalLectures
+    });
+    return totalLectures;
+  };
 
-  }
-  
   //Function to fetch user enrolled courses
 
-  const fetchUserEnrolledCourses = async ()=>{
-    setEnrolledCourses(dummyCourses)
-  }
+  const fetchUserEnrolledCourses = async () => {
+    setEnrolledCourses(dummyCourses);
+  };
 
   useEffect(() => {
     fetchALlCourses();
-    fetchUserEnrolledCourses()
+    fetchUserEnrolledCourses();
   }, []);
+
+  const logInToken = async () => {
+    console.log(await getToken());
+  };
+  useEffect(() => {
+    if (user) {
+      logInToken();
+    }
+  }, [user]);
 
   const value = {
     currency,
@@ -85,7 +97,7 @@ export const AppContextProvider = (props) => {
     calculateNumberOfLecture,
     enrolledCourses,
     setEnrolledCourses,
-    fetchUserEnrolledCourses
+    fetchUserEnrolledCourses,
   };
   return (
     <AppContext.Provider value={value}>{props.children}</AppContext.Provider>
